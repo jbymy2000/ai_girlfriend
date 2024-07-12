@@ -1,6 +1,7 @@
 import gradio as gr
 from chat_test1 import init_model,device,terminators,user_avatar,bot_avatar
 from threading import Thread
+import random
 
 with gr.Blocks() as demo:
     # step1: 载入模型
@@ -18,6 +19,7 @@ with gr.Blocks() as demo:
     def clear_history():
         global llama3_chat_history
         llama3_chat_history = []
+
 
     # 用于回复的方法
     def respond(message, chat_history):

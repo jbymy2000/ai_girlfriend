@@ -11,10 +11,12 @@ quantization_config = BitsAndBytesConfig(load_in_8bit=True)
 model_name = "shenzhi-wang/Llama3-8B-Chinese-Chat"
 model = AutoModelForCausalLM.from_pretrained(model_name, quantization_config=quantization_config)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-
+eos_token_id = tokenizer.eos_token_id
+pad_token_id = tokenizer.pad_token_id
+print(f"EOS Token ID: {eos_token_id}, Pad Token ID: {pad_token_id}")
 class StopOnTokens(StoppingCriteria):
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
-        stop_ids = [29, 0]
+        stop_ids = [29, 0,128009]
         for stop_id in stop_ids:
             if input_ids[0][-1] == stop_id:
                 return True
@@ -38,6 +40,8 @@ def predict(message, history):
         top_k=1000,
         temperature=0.6,
         num_beams=1,
+        eos_token_id=10174,   
+        pad_token_id=10174,
         stopping_criteria=StoppingCriteriaList([stop])
         )
     t = Thread(target=model.generate, kwargs=generate_kwargs)
@@ -45,9 +49,10 @@ def predict(message, history):
 
     partial_message = ""
     for new_token in streamer:
+        print(f"New token: {new_token}")
         if new_token != '<':
             partial_message += new_token
-            print(partial_message)
+            # 打印当前生成的所有token ID
             yield partial_message
 
 gr.ChatInterface(predict).launch()
